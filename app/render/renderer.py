@@ -2,7 +2,7 @@ import io
 import re
 
 import html
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from sqlalchemy.orm import Session
 
 from app.database.database import get_db
@@ -90,23 +90,23 @@ class PageRenderer:
         result = re.sub(pattern, lambda m: self.image_parser(m.group(1)), content)
         return result
 
-    def math_converter(self, formula):
-        formula = html.unescape(formula)
-        fontsize = 16
-        dpi = 150
-
-        fig = plt.figure()
-        fig.text(0, 0, formula, fontsize=fontsize)
-
-        output = io.StringIO()
-        fig.savefig(output, dpi=dpi, transparent=True, format='svg', bbox_inches='tight', pad_inches=0.1)
-        plt.close()
-
-        data = "".join(output.getvalue().split("\n")[3::])
-        return data
+    # def math_converter(self, formula):
+    #     formula = html.unescape(formula)
+    #     fontsize = 16
+    #     dpi = 150
+    #
+    #     fig = plt.figure()
+    #     fig.text(0, 0, formula, fontsize=fontsize)
+    #
+    #     output = io.StringIO()
+    #     fig.savefig(output, dpi=dpi, transparent=True, format='svg', bbox_inches='tight', pad_inches=0.1)
+    #     plt.close()
+    #
+    #     data = "".join(output.getvalue().split("\n")[3::])
+    #     return data
 
     def math_renderer(self, content):
-        content = re.sub(r'\[latex\](.*?)\[\/latex\]', lambda m: self.math_converter(m.group(1)), content)
+        # content = re.sub(r'\[latex\](.*?)\[\/latex\]', lambda m: self.math_converter(m.group(1)), content)
         return content
 
     def render(self, content):
