@@ -8,8 +8,8 @@ from app.constants import PageTypes
 from app.database import models
 from app.database.database import get_db
 from app.routers import Admin
-from app.tools.importing import process_documents, process_pdf, process_qa, process_dates, process_characters, \
-    process_dictionary, process_quiz
+# from app.tools.importing import process_documents, process_pdf, process_qa, process_dates, process_characters, \
+#     process_dictionary, process_quiz
 
 router = APIRouter()
 
