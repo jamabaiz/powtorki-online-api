@@ -15,11 +15,12 @@ pandas==1.5.0
 openpyxl==3.0.10
 odfpy==1.4.1
 xlrd==2.0.1
-matplotlib==3.5.2
+matplotlib==3.9.0
 passlib==1.7.4
-html
 tqdm==4.64.1
 fuzzysearch==0.7.3
 fastapi_permissions==0.2.7
 python-jose==3.3.0
 bcrypt==4.0.1
+PyMySQL==1.1.1
+numpy==1.26.4
