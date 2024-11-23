@@ -21,7 +21,6 @@ class TaxonomyTypes:
     SubjectTaxonomy = 2
     ChapterTaxonomy = 3
     SetTaxonomy = 4
-    KindTaxonomy = 5
 
 
 class Roles:

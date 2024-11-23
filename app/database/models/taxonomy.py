@@ -85,12 +85,6 @@ class SetTaxonomy(Taxonomy):
     }
 
 
-class KindTaxonomy(Taxonomy):
-    __mapper_args__ = {
-        'polymorphic_identity': TaxonomyTypes.KindTaxonomy
-    }
-
-
 class TaxonomyType(Base):
     __tablename__ = "taxonomy_types"
 
