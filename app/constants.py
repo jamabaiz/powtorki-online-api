@@ -16,6 +16,21 @@ class PageTypes:
     VideoScriptPage = 10
 
 
+class PageSubTypes:
+    VideoScriptPage = 1
+    # Dowod = 2
+    # Doswiadczenie = 3
+    MindmapPage = 4
+    Lesson = 5
+    DocumentPage = 6
+    Character = 7
+    Date = 8
+    Dictionary = 9
+    QA = 10
+    Quiz = 11
+    # Twierdzenie = 12
+
+
 class TaxonomyTypes:
     Taxonomy = 1
     SubjectTaxonomy = 2

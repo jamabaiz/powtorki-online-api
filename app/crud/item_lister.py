@@ -1,11 +1,10 @@
 from random import shuffle
 from typing import List, Union
 
-from sqlalchemy import or_
 from sqlalchemy.orm import Session, joinedload, selectin_polymorphic
 
 from app.constants import PageTypes, ActivitySettings
-from app.crud.models.page_dto import PageForm
+from app.crud.models.page_dto import PageForm, PagedResult
 from app.database import models
 from app.helpers import get_descendants
 from app.render.renderer import PageRenderer
@@ -126,7 +125,8 @@ class ItemLister:
                 .options(
             selectin_polymorphic(models.Page, [models.QuizPage, models.DocumentPage, models.CalendarPage]),
             joinedload(models.QuizPage.answers)
-            .load_only(models.PageAnswer.id, models.PageAnswer.id_answer, models.PageAnswer.answer)
+            .load_only(models.PageAnswer.id, models.PageAnswer.id_answer, models.PageAnswer.answer,
+                       models.PageAnswer.is_correct)  # todo: is_correct, only for frontend
             ,
             joinedload(models.DocumentPage.media),
             joinedload(models.CalendarPage.date),
@@ -145,10 +145,10 @@ class ItemLister:
 
         return item
 
-    def get_items(self, pagination_no: int = 1) -> List[models.Page]:
+    def get_items(self, pagination_no: int = 1) -> PagedResult[models.Page]:
         if not pagination_no > 0:
             raise ValueError("Page cannot be less than 1")
-        pagination_no = pagination_no - 1
+        offset = pagination_no - 1
 
         query = (self.db.query(models.Page)  # noqa
         .join(models.Page.taxonomies)
@@ -176,10 +176,10 @@ class ItemLister:
 
         if len(self.filter_name) > 0:
             query = query.filter(
-                or_(
-                    models.Page.title.match(self.filter_name),
-                    models.Page.title.like(f'%{self.filter_name}%')
-                )
+                # or_(
+                # models.Page.title.match(self.filter_name),
+                models.Page.title.like(f'%{self.filter_name}%')
+                # )
             )
 
         if len(self.filter_sub_types) == 1:
@@ -191,11 +191,13 @@ class ItemLister:
         else:
             query = query.order_by(models.Page.title)
 
-        results = (query.distinct(models.Page.id).from_self()
-                   .offset(self.pagination_limit * pagination_no).limit(self.pagination_limit)
-                   .all())
+        query = query.distinct(models.Page.id).from_self()
+
+        total_number = query.count()
+
+        results = query.offset(self.pagination_limit * offset).limit(self.pagination_limit).all()
         for page in results:
             if page.id_type == PageTypes.QuizPage:
                 shuffle(page.answers)
 
-        return results
+        return PagedResult(results, total_number)

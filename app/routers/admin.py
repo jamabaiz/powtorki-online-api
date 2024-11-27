@@ -1,40 +1,51 @@
 from fastapi import APIRouter, UploadFile, Form, Depends
-from fastapi_permissions import Allow, All
 from sqlalchemy.orm import Session
 from starlette.responses import HTMLResponse
 
-from app.auth.permissions import Permission
-from app.constants import PageTypes
+from app.constants import PageSubTypes
 from app.database import models
 from app.database.database import get_db
-from app.routers import Admin
 from app.tools.importing import process_documents, process_pdf, process_qa, process_dates, process_characters, \
     process_dictionary, process_quiz
 
 router = APIRouter()
 
 page_type_to_model = {
-    PageTypes.DocumentPage: models.DocumentPage,
-    PageTypes.CharacterPage: models.CharacterPage,
-    PageTypes.DictionaryPage: models.DictionaryPage,
-    PageTypes.CalendarPage: models.CalendarPage,
-    PageTypes.QuizPage: models.QuizPage,
-    PageTypes.QAPage: models.QAPage,
+    # PageTypes.DocumentPage: models.DocumentPage ,
+    # PageTypes.ScriptPage: models.DocumentPage,
+    # PageTypes.MindmapPage: models.DocumentPage,
+    # PageTypes.CharacterPage: models.CharacterPage,
+    # PageTypes.DictionaryPage: models.DictionaryPage,
+    # PageTypes.CalendarPage: models.CalendarPage,
+    # PageTypes.QuizPage: models.QuizPage,
+    # PageTypes.QAPage: models.QAPage,
+
+    PageSubTypes.VideoScriptPage: models.DocumentPage,
+    PageSubTypes.MindmapPage: models.DocumentPage,
+    PageSubTypes.Lesson: models.DocumentPage,
+    PageSubTypes.DocumentPage: models.DocumentPage,
+    PageSubTypes.Character: models.CharacterPage,
+    PageSubTypes.Date: models.CalendarPage,
+    PageSubTypes.Dictionary: models.DictionaryPage,
+    PageSubTypes.QA: models.QAPage,
+    PageSubTypes.Quiz: models.QuizPage
 }
 
 
-@router.post("/import_from_file/", dependencies=[Permission("view", [(Allow, Admin, All)])])
+@router.post("/import_from_file/")
 def import_from_file(files: list[UploadFile], taxonomy: int = Form(), page_type: int = Form(),
                      db: Session = Depends(get_db)):
     new_pages = []
 
+    page_type_enum = page_type
+
     tax = db.query(models.ChapterTaxonomy).filter(models.ChapterTaxonomy.id == taxonomy).first()
 
-    if page_type in [PageTypes.DocumentPage, PageTypes.ScriptPage, PageTypes]:
-        new_pages += process_documents(page_type_to_model[page_type], files)
-    elif page_type in [PageTypes.MindmapPage]:
-        new_pages += process_pdf(page_type_to_model[page_type], files)
-    elif page_type in [PageTypes.QAPage]:
+    if page_type_enum in [PageSubTypes.DocumentPage, PageSubTypes.Lesson]:
+        new_pages += process_documents(page_type_enum, files)
+    elif page_type_enum in [PageSubTypes.MindmapPage]:
+        new_pages += process_pdf(page_type_to_model[page_type_enum], files)
+    elif page_type_enum in [PageSubTypes.QA]:
         for file in files:
             qa_tax = models.Taxonomy(name=file.filename, id_parent=tax.id)
             db.add(qa_tax)
@@ -44,16 +55,16 @@ def import_from_file(files: list[UploadFile], taxonomy: int = Form(), page_type:
                 quiz_page.taxonomies.append(map_page_tax)
                 db.add(map_page_tax)
                 db.add(quiz_page)
-    elif page_type in [PageTypes.CalendarPage]:
+    elif page_type_enum in [PageSubTypes.Date]:
         for file in files:
             new_pages += process_dates(file, db)
-    elif page_type in [PageTypes.CharacterPage]:
+    elif page_type_enum in [PageSubTypes.Character]:
         for file in files:
             new_pages += process_characters(file)
-    elif page_type in [PageTypes.DictionaryPage]:
+    elif page_type_enum in [PageSubTypes.Dictionary]:
         for file in files:
             new_pages += process_dictionary(file)
-    elif page_type in [PageTypes.QuizPage]:
+    elif page_type_enum in [PageSubTypes.Quiz]:
         for file in files:
             process_quiz(file, db, tax)
     else:
@@ -68,11 +79,12 @@ def import_from_file(files: list[UploadFile], taxonomy: int = Form(), page_type:
 
     print(f"Flushing")
     db.flush()
+    db.commit()
 
     return {"filenames": (file.filename for file in files), "taxonomy": taxonomy, "page_type": page_type}
 
 
-@router.get("/admin/", dependencies=[Permission("view", [(Allow, Admin, All)])])
+@router.get("/admin/")
 async def main():
     content = """
 <!DOCTYPE html>
@@ -81,18 +93,27 @@ async def main():
 <form action="/import_from_file/" enctype="multipart/form-data" method="post">
 <label>Files: <input name="files" type="file" multiple></label><br>
 <label>Type: <select name="page_type" required>
-  <option value="2">Materiały do nauki</option>
-  <option value="3">Lekcje</option>
-  <option value="4">Postacie</option>
-  <option value="5">Kalendarz</option>
-  <option value="6">Pojęcia</option>
-  <option value="7">Pytania i odpowiedzi</option>
-  <option value="8">Quiz</option>
-  <option value="9">Mapa mysli</option>
+  <option value="1">Lekcja Video</option>
+  <option value="4">Mapa Mysli</option>
+  <option value="5">Skrypt Lekcji</option>
+  <option value="6">Materiały do nauki</option>
+  <option value="7">Postacie</option>
+  <option value="8">Kalendarz</option>
+  <option value="9">Pojęcia</option>
+  <option value="10">Pytania i odpowiedzi</option>
+  <option value="11">Quiz</option>
 </select></label><br>
 <label>Taxonomy: <select name="taxonomy" required>
-  <option value="228">XVIII Wiek - Historia Polski</option>
-  <option value="229">XVIII Wiek - Historia Powszechna</option>
+  <option value="584">1.1 XX-Lecie - Historia Polski </option>
+  <option value="585">1.2 XX-Lecie - Historia Powszechna</option>
+  <option value="586">2. II Wojna Światowa</option>
+  <option value="587">3.1 XX Wiek 1945-1953</option>
+  <option value="588">3.2 XX Wiek 1953-1970</option>
+  <option value="589">3.3 XX Wiek 1968-1991</option>
+  <option value="708">II Wojna Światowa - Polska</option>
+  <option value="709">II Wojna Światowa - Świat</option>
+  <option value="710">Po II WŚ - PL</option>
+  <option value="711">Po II WŚ - Świat</option>
 </select></label></br>
 <input type="submit">
 </form>

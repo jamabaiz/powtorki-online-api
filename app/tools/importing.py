@@ -11,6 +11,7 @@ from fastapi import UploadFile
 from pdf2image import convert_from_bytes
 from sqlalchemy.orm import Session
 
+from app.constants import PageSubTypes
 from app.database import models
 
 IMAGES_PATH = './images-to-upload/'
@@ -41,7 +42,7 @@ def convert_image(image):
     }
 
 
-def process_documents(model: Type[models.Page], files: list[UploadFile]) -> list[models.Page]:
+def process_documents(page_sub_type: int, files: list[UploadFile]) -> list[models.Page]:
     pages = []
     for file in files:
         filename = os.path.splitext(file.filename)[0]
@@ -52,7 +53,8 @@ def process_documents(model: Type[models.Page], files: list[UploadFile]) -> list
         file_bytes = io.BytesIO(file.file.read())
         conversion = mammoth.convert_to_html(file_bytes, convert_image=mammoth.images.img_element(convert_image))
 
-        new_page = model()
+        new_page = models.DocumentPage()
+        new_page.id_sub_type = page_sub_type
         new_page.title = filename
         new_page.document = conversion.value
         pages.append(new_page)
@@ -74,6 +76,7 @@ def process_single_pdf(model: Type[models.Page], file: UploadFile) -> models.Pag
         pdf_page.save(os.path.join(IMAGES_PATH, f"{image_name}.png"), "PNG")
 
     new_page = model()
+    new_page.id_sub_type = PageSubTypes.MindmapPage
     new_page.title = filename
     new_page.document = document
     return new_page
@@ -94,6 +97,7 @@ def process_pdf(model: Type[models.Page], files: list[UploadFile]) -> list[model
 def process_qa(file: UploadFile):
     pages = []
     data = pd.read_excel(file.file.read(), header=None, names=["question", "answer"])
+
     for date, answer in data.iterrows():
         question = answer['question']
         answer = answer['answer']
@@ -101,6 +105,7 @@ def process_qa(file: UploadFile):
             raise TypeError(f"Row bad format of file: {question} - {answer}")
 
         new_page = models.QAPage()
+        new_page.id_sub_type = PageSubTypes.QA
         new_page.title = question
         new_page.document = answer
         pages.append(new_page)
@@ -115,6 +120,7 @@ def process_dictionary(file: UploadFile):
         description = answer['description']
 
         new_page = models.DictionaryPage()
+        new_page.id_sub_type = PageSubTypes.Dictionary
         new_page.title = name
         new_page.document = description
         pages.append(new_page)
@@ -129,6 +135,7 @@ def process_characters(file: UploadFile):
         description = answer['description']
 
         new_page = models.CharacterPage()
+        new_page.id_sub_type = PageSubTypes.Character
         new_page.title = name
         new_page.document = description
         pages.append(new_page)
@@ -143,6 +150,7 @@ def process_dates(file: UploadFile, db: Session):
         name = answer['name']
 
         new_page = models.CalendarPage()
+        new_page.id_sub_type = PageSubTypes.Date
         new_page.title = name
 
         calendar = models.Date(date_text=date)
@@ -158,7 +166,7 @@ def process_quiz(file: UploadFile, db: Session, taxonomy_parent: models.Taxonomy
     data = pd.read_excel(file.file.read(), header=None,
                          names=["question", "answer_correct", "answer_1", "answer_2", "answer_3"])
 
-    quiz_taxonomy = models.QuizTaxonomy(id_parent=taxonomy_parent.id, name=file.filename)
+    quiz_taxonomy = models.SetTaxonomy(id_parent=taxonomy_parent.id, name=file.filename)
     db.add(quiz_taxonomy)
 
     for date, row in data.iterrows():
@@ -176,6 +184,7 @@ def process_quiz(file: UploadFile, db: Session, taxonomy_parent: models.Taxonomy
             raise TypeError(f"Row bad format of file: {question} -  {text_answers}")
 
         new_page = models.QuizPage()
+        new_page.id_sub_type = PageSubTypes.Quiz
         new_page.title = question
 
         for index, text_answer in enumerate(text_answers):

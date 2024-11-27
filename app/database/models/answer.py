@@ -1,6 +1,6 @@
 import json
 
-from sqlalchemy import Column, Integer, VARCHAR, ForeignKey
+from sqlalchemy import Column, Integer, VARCHAR, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 
 from app.database.database import Base
@@ -12,7 +12,7 @@ class MapPageAnswer(Base):
     id = Column(Integer, primary_key=True, index=True)
     id_question = Column(Integer, ForeignKey("pages.id"))
     id_answer = Column(Integer, ForeignKey("answers.id"))
-    is_correct = Column(Integer)
+    is_correct = Column(Boolean)
 
     page = relationship("QuizPage", uselist=False, back_populates="map_answers")
     answer = relationship("Answer", uselist=False)

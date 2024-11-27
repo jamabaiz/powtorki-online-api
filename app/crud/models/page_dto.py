@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Generic
 
 from pydantic import BaseModel
 
@@ -30,4 +30,19 @@ class PageForm(BaseModel):
 
     taxonomies: List[TaxonomyMapForm] | None
     answers: List[AnswerMapForm] | None
+    map_answers: List[AnswerMapForm] | None
     date: DateForm | None
+
+
+from typing import TypeVar
+
+T = TypeVar('T')
+
+
+class PagedResult(Generic[T]):
+    items: List[T]
+    total_number: int
+
+    def __init__(self, items: List[T], total_number: int):
+        self.items = items
+        self.total_number = total_number
