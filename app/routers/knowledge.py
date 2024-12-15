@@ -256,9 +256,10 @@ def post_knowledge_item(page_content: PageForm, db: Session = Depends(get_db)):
 )
 async def post_file(file: UploadFile):
     _, extension = os.path.splitext(file.filename)
-    file_hq_location = f"file-upload/original/{uuid.uuid4()}{extension}"
-    file_shadow_location = f"file-upload/{uuid.uuid4()}{extension}"
-    file_compressed_location = f"file-upload/{uuid.uuid4()}.webp"
+    new_name = uuid.uuid4()
+    file_hq_location = f"file-upload/original/{new_name}{extension}"
+    file_shadow_location = f"file-upload/{new_name}{extension}"
+    file_compressed_location = f"file-upload/{new_name}.webp"
     with open(file_hq_location, "wb+") as file_object:
         # noinspection PyTypeChecker
         shutil.copyfileobj(file.file, file_object)
