@@ -256,7 +256,7 @@ def post_file(file: UploadFile):
     _, extension = os.path.splitext(file.filename)
     rand_file_name = f"{uuid.uuid4()}{extension}"
 
-    file_location = f"images-to-upload/{rand_file_name}"
+    file_location = f"images-upload/{rand_file_name}"
     with open(file_location, "wb+") as file_object:
         # noinspection PyTypeChecker
         shutil.copyfileobj(file.file, file_object)
