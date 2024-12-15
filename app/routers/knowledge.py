@@ -1,6 +1,9 @@
+import os
+import shutil
+import uuid
 from typing import List, Union
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile
 from fastapi_permissions import Allow, Authenticated, All
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -235,11 +238,26 @@ def delete_knowledge_item(page_id: int, db: Session = Depends(get_db)):
 
 @router.post(
     "/page",
-    # dependencies=[Permission("post", [(Allow, Authenticated, All)])]
+    dependencies=[Permission("post", [(Allow, Authenticated, All)])]
 )
-def put_knowledge_item(page_content: PageForm, db: Session = Depends(get_db)):
+def post_knowledge_item(page_content: PageForm, db: Session = Depends(get_db)):
     page = ItemLister(db).post_item(page_content)
     if page is None:
         raise HTTPException(status_code=404, detail="Knowledge page not found")
     else:
         return page
+
+
+@router.post(
+    "/file",
+    dependencies=[Permission("post", [(Allow, Authenticated, All)])]
+)
+def post_file(file: UploadFile):
+    _, extension = os.path.splitext(file.filename)
+    rand_file_name = f"{uuid.uuid4()}{extension}"
+
+    file_location = f"images-to-upload/{rand_file_name}"
+    with open(file_location, "wb+") as file_object:
+        # noinspection PyTypeChecker
+        shutil.copyfileobj(file.file, file_object)
+    return {"imageUrl": f"https://media.powtorkionline.pl/media-upload/{rand_file_name}"}
