@@ -5,7 +5,7 @@ import time
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import knowledge, auth, quiz, admin
+from app.routers import knowledge, auth, quiz
 
 logging.basicConfig(
     filename="powtorki-api.log",
@@ -48,4 +48,3 @@ def read_root():
 app.include_router(auth.router)
 app.include_router(quiz.router)
 app.include_router(knowledge.router)
-app.include_router(admin.router)
