@@ -1,25 +1,19 @@
 from fastapi import APIRouter, UploadFile, Form, Depends
+from fastapi_permissions import Allow, All
 from sqlalchemy.orm import Session
 from starlette.responses import HTMLResponse
 
+from app.auth.permissions import Permission
 from app.constants import PageSubTypes
 from app.database import models
 from app.database.database import get_db
+from app.routers import Admin
 from app.tools.importing import process_documents, process_pdf, process_qa, process_dates, process_characters, \
     process_dictionary, process_quiz
 
 router = APIRouter()
 
 page_type_to_model = {
-    # PageTypes.DocumentPage: models.DocumentPage ,
-    # PageTypes.ScriptPage: models.DocumentPage,
-    # PageTypes.MindmapPage: models.DocumentPage,
-    # PageTypes.CharacterPage: models.CharacterPage,
-    # PageTypes.DictionaryPage: models.DictionaryPage,
-    # PageTypes.CalendarPage: models.CalendarPage,
-    # PageTypes.QuizPage: models.QuizPage,
-    # PageTypes.QAPage: models.QAPage,
-
     PageSubTypes.VideoScriptPage: models.DocumentPage,
     PageSubTypes.MindmapPage: models.DocumentPage,
     PageSubTypes.Lesson: models.DocumentPage,
@@ -32,7 +26,7 @@ page_type_to_model = {
 }
 
 
-@router.post("/import_from_file/")
+@router.post("/import_from_file/", dependencies=[Permission("view", [(Allow, Admin, All)])])
 def import_from_file(files: list[UploadFile], taxonomy: int = Form(), page_type: int = Form(),
                      db: Session = Depends(get_db)):
     new_pages = []
@@ -84,7 +78,7 @@ def import_from_file(files: list[UploadFile], taxonomy: int = Form(), page_type:
     return {"filenames": (file.filename for file in files), "taxonomy": taxonomy, "page_type": page_type}
 
 
-@router.get("/admin/")
+@router.get("/admin/", dependencies=[Permission("view", [(Allow, Admin, All)])])
 async def main():
     content = """
 <!DOCTYPE html>
@@ -104,16 +98,9 @@ async def main():
   <option value="11">Quiz</option>
 </select></label><br>
 <label>Taxonomy: <select name="taxonomy" required>
-  <option value="584">1.1 XX-Lecie - Historia Polski </option>
-  <option value="585">1.2 XX-Lecie - Historia Powszechna</option>
-  <option value="586">2. II Wojna Światowa</option>
-  <option value="587">3.1 XX Wiek 1945-1953</option>
-  <option value="588">3.2 XX Wiek 1953-1970</option>
-  <option value="589">3.3 XX Wiek 1968-1991</option>
-  <option value="708">II Wojna Światowa - Polska</option>
-  <option value="709">II Wojna Światowa - Świat</option>
-  <option value="710">Po II WŚ - PL</option>
-  <option value="711">Po II WŚ - Świat</option>
+  <option value="713">I Podstawy prawa </option>
+  <option value="714">II Obywatel w sądzie</option>
+  <option value="715">III Unia Europejska</option>
 </select></label></br>
 <input type="submit">
 </form>

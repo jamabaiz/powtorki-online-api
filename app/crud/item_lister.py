@@ -3,7 +3,7 @@ from typing import List, Union
 
 from sqlalchemy.orm import Session, joinedload, selectin_polymorphic
 
-from app.constants import PageTypes, ActivitySettings
+from app.constants import PageTypes, ActivitySettings, PageSubTypes
 from app.crud.models.page_dto import PageForm, PagedResult
 from app.database import models
 from app.helpers import get_descendants
@@ -29,7 +29,7 @@ def compare_sets(old: set, new: set):
 
 class ItemLister:
 
-    def __init__(self, db: Session, limit: int = 25) -> None:
+    def __init__(self, db: Session, limit: int = 20) -> None:
         self.db = db
         self.pagination_limit = limit
 
@@ -184,10 +184,12 @@ class ItemLister:
 
         if len(self.filter_sub_types) == 1:
             page_type = self.filter_sub_types[0]
-            if page_type == 8:
+            if page_type == PageSubTypes.Date:
                 query = query.order_by(models.Date.date_number)
-            else:
+            elif page_type == PageSubTypes.Character or page_type == PageSubTypes.Dictionary:
                 query = query.order_by(models.Page.title)
+            else:
+                query = query.order_by(models.MapPageTaxonomy.order_no, models.Page.title)
         else:
             query = query.order_by(models.Page.title)
 
