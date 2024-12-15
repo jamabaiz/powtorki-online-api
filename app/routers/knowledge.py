@@ -1,8 +1,10 @@
 import os
 import shutil
 import uuid
-from typing import List, Union
+from typing import List, Union, io
 
+from PIL import Image
+from PIL.Image import Resampling
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile
 from fastapi_permissions import Allow, Authenticated, All
 from sqlalchemy import func
@@ -252,12 +254,16 @@ def post_knowledge_item(page_content: PageForm, db: Session = Depends(get_db)):
     "/file",
     dependencies=[Permission("post", [(Allow, Authenticated, All)])]
 )
-def post_file(file: UploadFile):
+async def post_file(file: UploadFile):
     _, extension = os.path.splitext(file.filename)
-    rand_file_name = f"{uuid.uuid4()}{extension}"
-
-    file_location = f"file-upload/{rand_file_name}"
-    with open(file_location, "wb+") as file_object:
+    file_hq_location = f"file-upload/original/{uuid.uuid4()}{extension}"
+    file_shadow_location = f"file-upload/original/{uuid.uuid4()}{extension}"
+    file_compressed_location = f"file-upload/original/{uuid.uuid4()}.webp"
+    with open(file_hq_location, "wb+") as file_object:
         # noinspection PyTypeChecker
         shutil.copyfileobj(file.file, file_object)
-    return {"imageUrl": f"https://media.powtorkionline.pl/media-upload/{rand_file_name}"}
+
+    img = Image.open(file_hq_location)
+    img.thumbnail((2048, 2048), resample=Resampling.LANCZOS)
+    img.save(file_compressed_location, format="WEBP")
+    return {"imageUrl": f"https://media.powtorkionline.pl/media-upload/{file_shadow_location}"}
