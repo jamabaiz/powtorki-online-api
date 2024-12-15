@@ -257,8 +257,8 @@ def post_knowledge_item(page_content: PageForm, db: Session = Depends(get_db)):
 async def post_file(file: UploadFile):
     _, extension = os.path.splitext(file.filename)
     file_hq_location = f"file-upload/original/{uuid.uuid4()}{extension}"
-    file_shadow_location = f"file-upload/original/{uuid.uuid4()}{extension}"
-    file_compressed_location = f"file-upload/original/{uuid.uuid4()}.webp"
+    file_shadow_location = f"file-upload/{uuid.uuid4()}{extension}"
+    file_compressed_location = f"file-upload/{uuid.uuid4()}.webp"
     with open(file_hq_location, "wb+") as file_object:
         # noinspection PyTypeChecker
         shutil.copyfileobj(file.file, file_object)
@@ -266,4 +266,4 @@ async def post_file(file: UploadFile):
     img = Image.open(file_hq_location)
     img.thumbnail((2048, 2048), resample=Resampling.LANCZOS)
     img.save(file_compressed_location, format="WEBP")
-    return {"imageUrl": f"https://media.powtorkionline.pl/media-upload/{file_shadow_location}"}
+    return {"imageUrl": f"https://media.powtorkionline.pl/{file_shadow_location}"}
