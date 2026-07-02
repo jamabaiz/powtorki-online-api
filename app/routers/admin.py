@@ -30,7 +30,7 @@ def import_from_file(files: list[UploadFile], taxonomy: int = Form(), page_type:
 
     tax = db.query(models.ChapterTaxonomy).filter(models.ChapterTaxonomy.id == taxonomy).first()
 
-    if page_type in [PageTypes.DocumentPage, PageTypes.ScriptPage, PageTypes]:
+    if page_type in [PageTypes.DocumentPage, PageTypes.ScriptPage]:
         new_pages += process_documents(page_type_to_model[page_type], files)
     elif page_type in [PageTypes.MindmapPage]:
         new_pages += process_pdf(page_type_to_model[page_type], files)
@@ -67,6 +67,7 @@ def import_from_file(files: list[UploadFile], taxonomy: int = Form(), page_type:
         db.add(map_page_tax)
 
     print(f"Flushing")
+    db.commit()
     db.flush()
 
     return {"filenames": (file.filename for file in files), "taxonomy": taxonomy, "page_type": page_type}
@@ -91,8 +92,11 @@ async def main():
   <option value="9">Mapa mysli</option>
 </select></label><br>
 <label>Taxonomy: <select name="taxonomy" required>
-  <option value="228">XVIII Wiek - Historia Polski</option>
-  <option value="229">XVIII Wiek - Historia Powszechna</option>
+  <option value="742">13. Organizacje międzynarodowe</option>
+  <option value="743">14. Konflikty</option>
+  <option value="744">15. Problemy współczesnego świata</option>
+  <option value="745">16. Transformacja polska w XXI wieku</option>
+  <option value="746">17. Gospodarka wolnorynkowa</option>
 </select></label></br>
 <input type="submit">
 </form>
