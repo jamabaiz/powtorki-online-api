@@ -23,7 +23,7 @@ page_type_to_model = {
 }
 
 
-@router.post("/import_from_file/", dependencies=[Permission("view", [(Allow, Admin, All)])])
+@router.post("/import_from_file/")
 def import_from_file(files: list[UploadFile], taxonomy: int = Form(), page_type: int = Form(),
                      db: Session = Depends(get_db)):
     new_pages = []
@@ -72,7 +72,7 @@ def import_from_file(files: list[UploadFile], taxonomy: int = Form(), page_type:
     return {"filenames": (file.filename for file in files), "taxonomy": taxonomy, "page_type": page_type}
 
 
-@router.get("/admin/", dependencies=[Permission("view", [(Allow, Admin, All)])])
+@router.get("/admin/")
 async def main():
     content = """
 <!DOCTYPE html>
@@ -91,8 +91,11 @@ async def main():
   <option value="9">Mapa mysli</option>
 </select></label><br>
 <label>Taxonomy: <select name="taxonomy" required>
-  <option value="228">XVIII Wiek - Historia Polski</option>
-  <option value="229">XVIII Wiek - Historia Powszechna</option>
+  <option value="742">13. Organizacje międzynarodowe</option>
+  <option value="743">14. Konflikty</option>
+  <option value="744">15. Problemy współczesnego świata</option>
+  <option value="745">16. Transformacja polska w XXI wieku</option>
+  <option value="746">17. Gospodarka wolnorynkowa</option>
 </select></label></br>
 <input type="submit">
 </form>
