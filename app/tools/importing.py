@@ -5,6 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Type
 
 import mammoth as mammoth
+import numpy as np
 import pandas as pd
 from PIL import Image
 from fastapi import UploadFile
@@ -94,11 +95,14 @@ def process_pdf(model: Type[models.Page], files: list[UploadFile]) -> list[model
 def process_qa(file: UploadFile):
     pages = []
     data = pd.read_excel(file.file.read(), header=None, names=["question", "answer"])
+    data = data.replace({np.nan: None})
+
     for date, answer in data.iterrows():
         question = answer['question']
         answer = answer['answer']
         if not question or not answer:
-            raise TypeError(f"Row bad format of file: {question} - {answer}")
+            continue
+            # raise TypeError(f"Row bad format of file: {question} - {answer}")
 
         new_page = models.QAPage()
         new_page.title = question
@@ -110,6 +114,8 @@ def process_qa(file: UploadFile):
 def process_dictionary(file: UploadFile):
     pages = []
     data = pd.read_excel(file.file.read(), header=None, names=["name", "description"])
+
+    data = data.replace({np.nan: None})
     for date, answer in data.iterrows():
         name = answer['name']
         description = answer['description']
@@ -124,6 +130,8 @@ def process_dictionary(file: UploadFile):
 def process_characters(file: UploadFile):
     pages = []
     data = pd.read_excel(file.file.read(), header=None, names=["name", "description"])
+    data = data.replace({np.nan: None})
+
     for date, answer in data.iterrows():
         name = answer['name']
         description = answer['description']
@@ -138,9 +146,14 @@ def process_characters(file: UploadFile):
 def process_dates(file: UploadFile, db: Session):
     pages = []
     data = pd.read_excel(file.file.read(), header=None, names=["date", "name"])
+    data = data.replace({np.nan: None})
+
     for date, answer in data.iterrows():
         date = answer['date']
         name = answer['name']
+
+        if date is None or name is None:
+            continue
 
         new_page = models.CalendarPage()
         new_page.title = name
@@ -158,7 +171,8 @@ def process_quiz(file: UploadFile, db: Session, taxonomy_parent: models.Taxonomy
     data = pd.read_excel(file.file.read(), header=None,
                          names=["question", "answer_correct", "answer_1", "answer_2", "answer_3"])
 
-    quiz_taxonomy = models.QuizTaxonomy(id_parent=taxonomy_parent.id, name=file.filename)
+    print(file.filename)
+    quiz_taxonomy = models.SetTaxonomy(id_parent=taxonomy_parent.id, name=file.filename)
     db.add(quiz_taxonomy)
 
     for date, row in data.iterrows():
@@ -171,12 +185,19 @@ def process_quiz(file: UploadFile, db: Session, taxonomy_parent: models.Taxonomy
             text_answers.append(str(row['answer_1']))
         if row['answer_2']:
             text_answers.append(str(row['answer_2']))
+        if row['answer_3']:
+            text_answers.append(str(row['answer_3']))
 
-        if not question or len(text_answers) < 2:
-            raise TypeError(f"Row bad format of file: {question} -  {text_answers}")
+        if question is None:
+            continue
+        #
+        # if not question or len(text_answers) < 2:
+        #     raise TypeError(f"Row bad format of file: {question} -  {text_answers}")
 
         new_page = models.QuizPage()
-        new_page.title = question
+        new_page.title = str(question)
+
+        print(row)
 
         for index, text_answer in enumerate(text_answers):
             answer = models.Answer(answer=text_answer)
