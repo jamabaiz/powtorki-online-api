@@ -1,14 +1,13 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class DbCharacter(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     name: str | None
     description: str | None
     note: str | None
-
-    class Config:
-        from_attributes = True
 
 
 class UpdateCharacter(BaseModel):

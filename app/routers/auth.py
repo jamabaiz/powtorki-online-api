@@ -6,7 +6,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from fastapi_permissions import All, Allow, Authenticated
 from sqlalchemy.orm import Session
 
-from app.auth.dependecies import authenticate_user, Token, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES, TokenData
+from app.auth.dependencies import authenticate_user, Token, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES, TokenData, get_current_user
 from app.auth.permissions import Permission
 from app.constants import Roles
 from app.database.database import get_db
@@ -39,6 +39,6 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@router.get("/users/me/", dependencies=[Permission("view", [(Allow, Authenticated, All)])])
-async def read_users_me():
-    return {}
+@router.get("/users/me/", response_model=TokenData, dependencies=[Permission("view", [(Allow, Authenticated, All)])])
+async def read_users_me(current_user: TokenData = Depends(get_current_user)):
+    return current_user

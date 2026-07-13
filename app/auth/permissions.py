@@ -3,7 +3,7 @@ from fastapi_permissions import (
     Authenticated,
     Everyone, configure_permissions)
 
-from app.auth.dependecies import TokenData, get_current_user
+from app.auth.dependencies import TokenData, get_current_user
 
 
 def get_active_principals(user: TokenData = Depends(get_current_user)):

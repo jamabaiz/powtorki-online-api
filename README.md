@@ -10,9 +10,9 @@ OpenApi at:
 
 ## Installation
 
-Create new env python3.9 or python3.10
+Create new env python 3.12+
 
-`pip instal -r requirements.txt`
+`pip install -r requirements.txt`
 
 ## Run
 

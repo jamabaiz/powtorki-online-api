@@ -1,11 +1,13 @@
+import logging
 from collections import Counter
-from typing import List
 
 from sqlalchemy.orm import Session, joinedload
 
 from app.constants import ActivitySettings
 from app.database import models
 from app.database.models import UserQuizAnswer
+
+logger = logging.getLogger(__name__)
 
 
 def compare(s, t):
@@ -25,7 +27,7 @@ class QuizEndpoint:
                 .filter(models.QuizPage.id == page_id).first())
         return item
 
-    def answer(self, answers_id: List[int]):
+    def answer(self, answers_id: list[int]):
 
         correct = []
         wrong = []
@@ -41,8 +43,8 @@ class QuizEndpoint:
                 log.id_answer = answer_id
                 # log.id_user = TODO: log user session id
                 self.session.add(log)
-        except Exception as e:
-            print("error:", str(e))
+        except Exception:
+            logger.exception("Error saving quiz answer")
 
         user_activity = models.UserActivity()
         user_activity.id_user = 1

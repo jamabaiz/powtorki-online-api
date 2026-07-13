@@ -1,6 +1,3 @@
-import json
-from typing import List
-
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -12,7 +9,7 @@ router = APIRouter()
 
 
 class Answer(BaseModel):
-    answers: List[int]
+    answers: list[int]
 
 
 @router.post("/quiz/{page_id}")
@@ -20,6 +17,6 @@ def post_quiz_answer(page_id: int, answer_data: Answer, db: Session = Depends(ge
     try:
         quiz = QuizEndpoint(db, page_id)
         correct = quiz.answer(answer_data.answers)
-        return json.dumps(correct)
+        return correct
     except Exception as err:
-        raise HTTPException(status_code=404, detail=err)
+        raise HTTPException(status_code=404, detail=str(err))

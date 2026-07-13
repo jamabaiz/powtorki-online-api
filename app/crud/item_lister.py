@@ -1,5 +1,5 @@
 from random import shuffle
-from typing import List, Union
+import logging
 
 from sqlalchemy.orm import Session, joinedload, selectin_polymorphic
 
@@ -8,6 +8,8 @@ from app.crud.models.page_dto import PageForm, PagedResult
 from app.database import models
 from app.helpers import get_descendants
 from app.render.renderer import PageRenderer
+
+logger = logging.getLogger(__name__)
 
 
 class CompareResult:
@@ -33,15 +35,13 @@ class ItemLister:
         self.db = db
         self.pagination_limit = limit
 
-        self.filter_taxonomies: List[int] = []
-        self.filter_sub_types: List[int] = []
-        self.filter_page_types: List[int] = []
+        self.filter_taxonomies: list[int] = []
+        self.filter_sub_types: list[int] = []
+        self.filter_page_types: list[int] = []
         self.filter_name: str = ""
         self.render_enabled = True
 
-        super().__init__()
-
-    def set_from_form(self, item: Union[models.Page, models.QuizPage, models.CalendarPage], form: PageForm):
+    def set_from_form(self, item: models.Page | models.QuizPage | models.CalendarPage, form: PageForm):
         item.title = form.title
         item.document = form.document
         item.note = form.note
@@ -114,11 +114,11 @@ class ItemLister:
             self.db.delete(item)
             self.db.commit()
             return True
-        except:
+        except Exception:
+            logger.exception(f"Error deleting item {page_id}")
             return False
 
-    def get_item(self, page_id: int) -> Union[
-        models.Page, models.QuizPage, models.CalendarPage, models.DictionaryPage, models.CharacterPage]:
+    def get_item(self, page_id: int) -> models.Page | models.QuizPage | models.CalendarPage | models.DictionaryPage | models.CharacterPage:
         renderer = PageRenderer()
 
         item = (self.db.query(models.Page)

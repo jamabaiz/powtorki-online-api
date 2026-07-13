@@ -1,7 +1,7 @@
-import os
 import shutil
 import uuid
-from typing import List, Union, io
+import logging
+from pathlib import Path
 
 from PIL import Image
 from PIL.Image import Resampling
@@ -19,6 +19,7 @@ from app.crud.models.taxonomy_dto import TaxonomyOut, TaxonomyForm
 from app.database import models
 from app.database.database import get_db
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 path_to_model = {
@@ -55,7 +56,7 @@ subject_to_taxonomy_id = {
 @router.get(
     "/types"
 )
-def get_knowledge_taxonomy(db: Session = Depends(get_db)):
+def get_knowledge_types(db: Session = Depends(get_db)):
     return db.query(models.PageSubType).all()
 
 
@@ -63,7 +64,7 @@ def get_knowledge_taxonomy(db: Session = Depends(get_db)):
     "/taxonomy/search",
     response_model=list[TaxonomyOut],
 )
-def get_knowledge_taxonomy(query: str = "", db: Session = Depends(get_db)):
+def search_knowledge_taxonomy(query: str = "", db: Session = Depends(get_db)):
     taxonomy = TaxonomyLister(db, models.Taxonomy)
 
     search = taxonomy.search(query)
@@ -75,7 +76,7 @@ def get_knowledge_taxonomy(query: str = "", db: Session = Depends(get_db)):
     response_model=TaxonomyOut,
     dependencies=[Permission("put", [(Allow, Authenticated, All)])]
 )
-def get_knowledge_taxonomy(id_taxonomy: int, tax_content: TaxonomyForm, db: Session = Depends(get_db)):
+def update_knowledge_taxonomy(id_taxonomy: int, tax_content: TaxonomyForm, db: Session = Depends(get_db)):
     crud = TaxonomyLister(db, models.Taxonomy)
     tax = crud.put(id_taxonomy, tax_content)
     return tax
@@ -86,7 +87,7 @@ def get_knowledge_taxonomy(id_taxonomy: int, tax_content: TaxonomyForm, db: Sess
     dependencies=[Permission("delete", [(Allow, Authenticated, All)])]
 
 )
-def get_knowledge_taxonomy(id_taxonomy: int, db: Session = Depends(get_db)):
+def delete_knowledge_taxonomy(id_taxonomy: int, db: Session = Depends(get_db)):
     crud = TaxonomyLister(db, models.Taxonomy)
     tax = crud.delete(id_taxonomy)
     return tax
@@ -97,7 +98,7 @@ def get_knowledge_taxonomy(id_taxonomy: int, db: Session = Depends(get_db)):
     response_model=TaxonomyOut,
     dependencies=[Permission("add", [(Allow, Authenticated, All)])]
 )
-def get_knowledge_taxonomy(tax_content: TaxonomyForm, db: Session = Depends(get_db)):
+def create_knowledge_taxonomy(tax_content: TaxonomyForm, db: Session = Depends(get_db)):
     crud = TaxonomyLister(db, models.Taxonomy)
     tax = crud.post(tax_content)
     return tax
@@ -107,7 +108,7 @@ def get_knowledge_taxonomy(tax_content: TaxonomyForm, db: Session = Depends(get_
     "/taxonomy/get/{taxonomy_id}",
     response_model=TaxonomyOut,
 )
-def get_knowledge_taxonomy(taxonomy_id: int, db: Session = Depends(get_db)):
+def get_single_knowledge_taxonomy(taxonomy_id: int, db: Session = Depends(get_db)):
     taxonomy = TaxonomyLister(db, models.Taxonomy)
 
     search = taxonomy.get_item(taxonomy_id)
@@ -115,8 +116,8 @@ def get_knowledge_taxonomy(taxonomy_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/taxonomy/{subject}")
-def get_knowledge_list(subject: Union[int, str, None], db: Session = Depends(get_db)):
-    if type(subject) is str:
+def get_knowledge_by_subject(subject: int | str | None, db: Session = Depends(get_db)):
+    if isinstance(subject, str):
         subject = subject_to_taxonomy_id.get(subject)
 
     # Assume to list only chapter taxonomies
@@ -125,7 +126,7 @@ def get_knowledge_list(subject: Union[int, str, None], db: Session = Depends(get
 
 
 @router.get("/taxonomy")
-def get_knowledge_list(types: List[int] = Query(default=[]), db: Session = Depends(get_db)):
+def get_knowledge_taxonomy_list(types: list[int] = Query(default=[]), db: Session = Depends(get_db)):
     crud = TaxonomyLister(db, models.Taxonomy)
     return crud.search(filter_types=types)
 
@@ -144,9 +145,9 @@ def get_knowledge_chapter(chapter_id: int = None, db: Session = Depends(get_db))
 
 
 @router.get("/pages")
-def get_knowledge_list(types: List[int | str] = Query(default=[]),
-                       chapters: List[int] = Query(default=[]),
-                       sub_types: List[int] = Query(default=[]),
+def get_knowledge_pages_list(types: list[int | str] = Query(default=[]),
+                       chapters: list[int] = Query(default=[]),
+                       sub_types: list[int] = Query(default=[]),
                        query: str = Query(default=""),
                        page_no: int = 1,
                        db: Session = Depends(get_db)):
@@ -246,12 +247,21 @@ def post_knowledge_item(page_content: PageForm, db: Session = Depends(get_db)):
     dependencies=[Permission("post", [(Allow, Authenticated, All)])]
 )
 async def post_file(file: UploadFile):
-    _, extension = os.path.splitext(file.filename)
+    file_path = Path(file.filename)
+    extension = file_path.suffix
     new_name = uuid.uuid4()
-    file_hq_location = f"file-upload/original/{new_name}{extension}"
+    
+    file_hq_dir = Path("file-upload/original")
+    file_hq_dir.mkdir(parents=True, exist_ok=True)
+    file_hq_location = file_hq_dir / f"{new_name}{extension}"
+    
+    file_compressed_dir = Path("file-upload")
+    file_compressed_dir.mkdir(parents=True, exist_ok=True)
+    file_compressed_location = file_compressed_dir / f"{new_name}.webp"
+    
     file_shadow_location = f"media-upload/{new_name}{extension}"
-    file_compressed_location = f"file-upload/{new_name}.webp"
-    with open(file_hq_location, "wb+") as file_object:
+    
+    with file_hq_location.open("wb+") as file_object:
         # noinspection PyTypeChecker
         shutil.copyfileobj(file.file, file_object)
 

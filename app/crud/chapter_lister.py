@@ -1,4 +1,3 @@
-from typing import List, Type
 
 from sqlalchemy import or_
 from sqlalchemy.orm import Session, joinedload
@@ -9,10 +8,9 @@ from app.database import models
 
 class TaxonomyLister:
 
-    def __init__(self, db: Session, model: Type[models.Taxonomy] = models.Taxonomy) -> None:
+    def __init__(self, db: Session, model: type[models.Taxonomy] = models.Taxonomy) -> None:
         self.db = db
         self.model = model
-        super().__init__()
 
     def get_item(self, taxonomy_id: int) -> models.Taxonomy:
         item = (self.db.query(self.model)
@@ -24,7 +22,7 @@ class TaxonomyLister:
         item.path = tax_tree if len(tax_tree) > 0 else []
         return item
 
-    def get_items(self, parent_id: int) -> List[models.Taxonomy]:
+    def get_items(self, parent_id: int) -> list[models.Taxonomy]:
         items = (self.db.query(self.model).
                  options(joinedload(self.model.children))
                  .filter(self.model.id_parent == parent_id)
@@ -71,7 +69,7 @@ class TaxonomyLister:
 
         return item
 
-    def get_taxonomy_tree(self, taxonomy: models.Taxonomy, tax_names=None) -> List[str]:
+    def get_taxonomy_tree(self, taxonomy: models.Taxonomy, tax_names=None) -> list[str]:
         if tax_names is None:
             tax_names = []
         if taxonomy.id_parent is None:
@@ -79,7 +77,7 @@ class TaxonomyLister:
         else:
             return self.get_taxonomy_tree(taxonomy.parent, tax_names + [taxonomy.name])
 
-    def search(self, name_filter: str | None = None, filter_types: List[int] | None = None, ):
+    def search(self, name_filter: str | None = None, filter_types: list[int] | None = None):
         query = (self.db.query(self.model))
 
         if name_filter and len(name_filter) > 0:

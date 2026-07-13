@@ -1,8 +1,8 @@
 import io
-import os
+import logging
 import random
 from concurrent.futures import ThreadPoolExecutor
-from typing import Type
+from pathlib import Path
 
 import mammoth as mammoth
 import pandas as pd
@@ -14,7 +14,8 @@ from sqlalchemy.orm import Session
 from app.constants import PageSubTypes
 from app.database import models
 
-IMAGES_PATH = './images-to-upload/'
+logger = logging.getLogger(__name__)
+IMAGES_PATH = Path('./images-to-upload/')
 
 
 def get_random_string(length):
@@ -23,17 +24,16 @@ def get_random_string(length):
 
 
 def convert_image(image):
-    if not os.path.isdir(IMAGES_PATH):
-        os.makedirs(IMAGES_PATH)
+    if not IMAGES_PATH.exists():
+        IMAGES_PATH.mkdir(parents=True, exist_ok=True)
 
     with image.open() as image_bytes:
-
         name = get_random_string(10)
 
         im = Image.open(image_bytes)
         if im.mode == 'CMYK':
-            im = image.convert('RGB')
-        im.save(f"./{IMAGES_PATH}/{name}.png", "PNG")
+            im = im.convert('RGB')
+        im.save(IMAGES_PATH / f"{name}.png", "PNG")
 
         encoded_src = f"https://media.powtorkionline.pl/media-upload/{name}.png"
 
@@ -45,9 +45,10 @@ def convert_image(image):
 def process_documents(page_sub_type: int, files: list[UploadFile]) -> list[models.Page]:
     pages = []
     for file in files:
-        filename = os.path.splitext(file.filename)[0]
-        print(f"Processing {filename}")
-        if not (file.filename.endswith('.docx')):
+        file_path = Path(file.filename)
+        filename = file_path.stem
+        logger.info(f"Processing {filename}")
+        if file_path.suffix.lower() != '.docx':
             raise TypeError(f"Unsupported document type of file: {file.filename}")
 
         file_bytes = io.BytesIO(file.file.read())
@@ -62,18 +63,19 @@ def process_documents(page_sub_type: int, files: list[UploadFile]) -> list[model
     return pages
 
 
-def process_single_pdf(model: Type[models.Page], file: UploadFile) -> models.Page:
-    filename = os.path.splitext(file.filename)[0]
-    print(f"Processing {filename}")
-    if not (file.filename.endswith('.pdf')):
+def process_single_pdf(model: type[models.Page], file: UploadFile) -> models.Page:
+    file_path = Path(file.filename)
+    filename = file_path.stem
+    logger.info(f"Processing {filename}")
+    if file_path.suffix.lower() != '.pdf':
         raise TypeError(f"Unsupported document type of file: {file.filename}")
 
-    pdf_pages = convert_from_bytes(file.file.read(), dpi=300)  # to trwa 10 sek
+    pdf_pages = convert_from_bytes(file.file.read(), dpi=300)
     document = ""
     for pdf_page in pdf_pages:
         image_name = get_random_string(10)
         document += f"<img src='https://media.powtorkionline.pl/media-upload/{image_name}.png' />\n"
-        pdf_page.save(os.path.join(IMAGES_PATH, f"{image_name}.png"), "PNG")
+        pdf_page.save(IMAGES_PATH / f"{image_name}.png", "PNG")
 
     new_page = model()
     new_page.id_sub_type = PageSubTypes.MindmapPage
@@ -82,7 +84,7 @@ def process_single_pdf(model: Type[models.Page], file: UploadFile) -> models.Pag
     return new_page
 
 
-def process_pdf(model: Type[models.Page], files: list[UploadFile]) -> list[models.Page]:
+def process_pdf(model: type[models.Page], files: list[UploadFile]) -> list[models.Page]:
     results = []
     with ThreadPoolExecutor() as executor:
         futures = []

@@ -1,6 +1,6 @@
-from typing import List, Generic
+from typing import Generic, TypeVar
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class TaxonomyMapForm(BaseModel):
@@ -18,8 +18,7 @@ class DateForm(BaseModel):
 
 
 class PageForm(BaseModel):
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
     id_type: int
     id_sub_type: int
@@ -28,21 +27,15 @@ class PageForm(BaseModel):
     description: str | None
     note: str | None
 
-    taxonomies: List[TaxonomyMapForm] | None
-    answers: List[AnswerMapForm] | None
-    map_answers: List[AnswerMapForm] | None
+    taxonomies: list[TaxonomyMapForm] | None
+    answers: list[AnswerMapForm] | None
+    map_answers: list[AnswerMapForm] | None
     date: DateForm | None
 
-
-from typing import TypeVar
 
 T = TypeVar('T')
 
 
-class PagedResult(Generic[T]):
-    items: List[T]
+class PagedResult(BaseModel, Generic[T]):
+    items: list[T]
     total_number: int
-
-    def __init__(self, items: List[T], total_number: int):
-        self.items = items
-        self.total_number = total_number
