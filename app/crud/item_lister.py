@@ -117,8 +117,8 @@ class ItemLister:
         except:
             return False
 
-    def get_item(self, page_id: int) -> [models.Page, models.QuizPage, models.CalendarPage, models.DictionaryPage,
-                                         models.CharacterPage]:
+    def get_item(self, page_id: int) -> Union[
+        models.Page, models.QuizPage, models.CalendarPage, models.DictionaryPage, models.CharacterPage]:
         renderer = PageRenderer()
 
         item = (self.db.query(models.Page)
@@ -132,6 +132,9 @@ class ItemLister:
             joinedload(models.CalendarPage.date),
             joinedload(models.Page.taxonomies).joinedload(models.MapPageTaxonomy.taxonomy))
                 .filter(models.Page.id == page_id).first())
+
+        if not item:
+            raise ValueError("Page not found")
 
         if self.render_enabled:
             user_activity = models.UserActivity()
