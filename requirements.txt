@@ -6,3 +6,8 @@ passlib
 PyMySQL
 Jinja2
 bcrypt==4.3.0
+mammoth
+pillow
+fastapi
+pdf2image
+pandas
