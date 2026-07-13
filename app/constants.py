@@ -4,34 +4,40 @@ class KnowledgeTypes:
 
 
 class PageTypes:
+    """
+    Defines page handling logic
+    """
     Page = 1
     DocumentPage = 2
-    ScriptPage = 3
     CharacterPage = 4
     CalendarPage = 5
     DictionaryPage = 6
     QAPage = 7
     QuizPage = 8
-    MindmapPage = 9
-    VideoScriptPage = 10
 
 
 class PageSubTypes:
+    """
+    Defines variants of page types (same logic different scope)
+    """
     VideoScriptPage = 1
-    # Dowod = 2
-    # Doswiadczenie = 3
+    # ProofPage = 2
+    # ExperimentPage = 3
     MindmapPage = 4
-    Lesson = 5
+    ScriptPage = 5
     DocumentPage = 6
     Character = 7
     Date = 8
     Dictionary = 9
     QA = 10
     Quiz = 11
-    # Twierdzenie = 12
+    # TheoremPage = 12
 
 
 class TaxonomyTypes:
+    """
+    Defines taxonomy logic scope
+    """
     Taxonomy = 1
     SubjectTaxonomy = 2
     ChapterTaxonomy = 3

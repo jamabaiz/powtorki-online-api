@@ -11,7 +11,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.auth.permissions import Permission
-from app.constants import PageTypes
+from app.constants import PageTypes, KnowledgeTypes
 from app.crud.chapter_lister import TaxonomyLister
 from app.crud.item_lister import ItemLister
 from app.crud.models.page_dto import PageForm
@@ -38,26 +38,18 @@ path_to_model = {
 }
 
 path_to_type = {
-    # podstawowa
-    'script': PageTypes.ScriptPage,
-
-    # lesson_video
     'document': PageTypes.DocumentPage,
     'mindmap': PageTypes.MindmapPage,
-
-    # uzupelnienia
     'character': PageTypes.CharacterPage,
     'dictionary': PageTypes.DictionaryPage,
     'date': PageTypes.CalendarPage,
-
-    # sprawdz wiedze
     'quiz': PageTypes.QuizPage,
     'qa': PageTypes.QAPage
 }
 
 subject_to_taxonomy_id = {
-    'history': 1,
-    'civics': 2
+    'history': KnowledgeTypes.History,
+    'civics': KnowledgeTypes.Civics
 }
 
 
