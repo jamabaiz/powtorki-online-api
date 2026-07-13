@@ -8,7 +8,7 @@ class DbCharacter(BaseModel):
     note: str | None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class UpdateCharacter(BaseModel):

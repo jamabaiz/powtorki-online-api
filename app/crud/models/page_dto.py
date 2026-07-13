@@ -19,7 +19,7 @@ class DateForm(BaseModel):
 
 class PageForm(BaseModel):
     class Config:
-        orm_mode = True
+        from_attributes = True
 
     id_type: int
     id_sub_type: int

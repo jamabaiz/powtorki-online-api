@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 class TaxonomyOut(BaseModel):
     class Config:
-        orm_mode = True
+        from_attributes = True
 
     id: int
     id_parent: int | None
@@ -17,7 +17,7 @@ class TaxonomyOut(BaseModel):
 
 class TaxonomyForm(BaseModel):
     class Config:
-        orm_mode = True
+        from_attributes = True
 
     id_parent: int | None
     id_taxonomy_type: int

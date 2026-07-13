@@ -13,6 +13,6 @@ class UserAuth(BaseModel):
 
 class UserOut(BaseModel):
     class Config:
-        orm_mode = True
+        from_attributes = True
 
     email: str
