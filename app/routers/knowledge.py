@@ -39,7 +39,6 @@ path_to_model = {
 
 path_to_type = {
     'document': PageTypes.DocumentPage,
-    'mindmap': PageTypes.MindmapPage,
     'character': PageTypes.CharacterPage,
     'dictionary': PageTypes.DictionaryPage,
     'date': PageTypes.CalendarPage,
