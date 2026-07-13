@@ -12,3 +12,5 @@ fastapi==0.139.0
 fastapi-permissions==0.2.7
 pdf2image==1.17.0
 pandas==3.0.3
+pytest==9.1.1
+uvicorn==0.49.0
