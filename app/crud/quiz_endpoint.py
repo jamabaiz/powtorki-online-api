@@ -29,7 +29,7 @@ class QuizEndpoint:
 
     def answer(self, answers_id: list[int]):
 
-        correct = []
+        correct : list[int] = []
         wrong = []
         for answer in self.question_page.answers:
             if answer.is_correct == 1:
