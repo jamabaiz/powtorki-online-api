@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class TaxonomyOut(BaseModel):
@@ -10,6 +10,7 @@ class TaxonomyOut(BaseModel):
     name: str
     description: str | None
     path: list[str] = []
+    children: 'list[TaxonomyOut]' = Field(default_factory=list)
 
 
 class TaxonomyForm(BaseModel):
