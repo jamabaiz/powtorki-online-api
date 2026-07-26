@@ -4,7 +4,7 @@ import logging
 from sqlalchemy.orm import Session, joinedload, selectin_polymorphic
 
 from app.constants import PageTypes, ActivitySettings, PageSubTypes
-from app.crud.models.page_dto import PageForm, PagedResult
+from app.crud.models.page_dto import PageForm, PagedResult, PageDTO
 from app.database import models
 from app.helpers import get_descendants
 from app.render.renderer import PageRenderer
@@ -100,17 +100,17 @@ class ItemLister:
         self.db.add(item)
         item = self.set_from_form(item, form)
         self.db.commit()
-        return item
+        return PageDTO.model_validate(item)
 
     def put_item(self, page_id: int, form):
-        item = self.get_item(page_id)
+        item = self._get_item(page_id)
         item = self.set_from_form(item, form)
         self.db.commit()
-        return item
+        return PageDTO.model_validate(item)
 
     def delete_item(self, page_id: int):
         try:
-            item = self.get_item(page_id)
+            item = self._get_item(page_id)
             self.db.delete(item)
             self.db.commit()
             return True
@@ -118,9 +118,7 @@ class ItemLister:
             logger.exception(f"Error deleting item {page_id}")
             return False
 
-    def get_item(self, page_id: int) -> models.Page | models.QuizPage | models.CalendarPage | models.DictionaryPage | models.CharacterPage:
-        renderer = PageRenderer()
-
+    def _get_item(self, page_id: int) -> models.Page:
         item = (self.db.query(models.Page)
                 .options(
             selectin_polymorphic(models.Page, [models.QuizPage, models.DocumentPage, models.CalendarPage]),
@@ -135,6 +133,12 @@ class ItemLister:
 
         if not item:
             raise ValueError("Page not found")
+        return item
+
+    def get_item(self, page_id: int) -> PageDTO:
+        renderer = PageRenderer()
+
+        item = self._get_item(page_id)
 
         if self.render_enabled:
             user_activity = models.UserActivity()
@@ -146,9 +150,9 @@ class ItemLister:
             if item.document:
                 item.document = renderer.render(item.document)
 
-        return item
+        return PageDTO.model_validate(item)
 
-    def get_items(self, pagination_no: int = 1) -> PagedResult[models.Page]:
+    def get_items(self, pagination_no: int = 1) -> PagedResult[PageDTO]:
         if not pagination_no > 0:
             raise ValueError("Page cannot be less than 1")
         offset = pagination_no - 1
@@ -205,4 +209,4 @@ class ItemLister:
             if page.id_type == PageTypes.QuizPage:
                 shuffle(page.answers)
 
-        return PagedResult(items=results, total_number=total_number)
+        return PagedResult(items=[PageDTO.model_validate(page) for page in results], total_number=total_number)
