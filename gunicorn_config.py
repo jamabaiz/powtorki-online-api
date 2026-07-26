@@ -1,5 +1,13 @@
+import os
+from dotenv import load_dotenv
+from uvicorn_worker import UvicornWorker
+
+load_dotenv()
+
+bind = os.getenv("GUNICORN_BIND", "127.0.0.1:8000")
+
 workers = 4
-worker_class = "uvicorn_worker.GunicornUVicornWorker"
+worker_class = UvicornWorker
 
 keepalive = 5
 
