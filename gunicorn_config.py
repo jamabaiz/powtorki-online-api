@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from uvicorn_worker import UvicornWorker
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = Path(__file__).resolve()
 
 chdir = str(PROJECT_ROOT)
 
