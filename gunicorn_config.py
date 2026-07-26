@@ -1,6 +1,11 @@
 import os
 from dotenv import load_dotenv
 from uvicorn_worker import UvicornWorker
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+chdir = str(PROJECT_ROOT)
 
 load_dotenv()
 
@@ -15,7 +20,7 @@ max_requests = 2000
 max_requests_jitter = 200
 
 timeout = 120
-graceful_timeout  = 30
+graceful_timeout = 30
 
 accesslog = "-"
 errorlog = "-"
