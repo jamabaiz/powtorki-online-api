@@ -205,4 +205,4 @@ class ItemLister:
             if page.id_type == PageTypes.QuizPage:
                 shuffle(page.answers)
 
-        return PagedResult(results, total_number)
+        return PagedResult(items=results, total_number=total_number)

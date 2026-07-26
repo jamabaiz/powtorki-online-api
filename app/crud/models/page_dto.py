@@ -37,5 +37,7 @@ T = TypeVar('T')
 
 
 class PagedResult(BaseModel, Generic[T]):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     items: list[T]
     total_number: int
